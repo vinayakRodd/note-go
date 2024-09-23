@@ -1,17 +1,59 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+const express = require('express')
+const cors = require('cors')
+const bp = require('body-parser')
+const myDb = require('./MongoDb')
+const App = new express()
+const PORT = 9000
+const PhysicsCyclePdf = require("./PhysicsCyclePdf")
+const ChemistryCyclePdf = require("./ChemistryCyclePdf")
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+App.use(cors({origin:"*"}))
+App.use(bp.json())
+App.use(express.urlencoded({ extended: false}))
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+
+App.use("/api/PhysicsCycle",PhysicsCyclePdf)
+App.use("/api/ChemistryCycle",ChemistryCyclePdf)
+
+
+App.post("/api/GetPhysicsCycleSubjects",async(req,resp)=>{
+
+    const PhysicsCycleCollection = myDb.collection("PhysicsCycle")
+
+    const SearchedSubject = req.body.SubjectName
+    console.log(SearchedSubject)
+
+    const regex = new RegExp(SearchedSubject, 'i'); 
+
+    const Subjects = await PhysicsCycleCollection.find({ SubjectName: regex }).toArray();
+
+    console.log(Subjects)
+
+    resp.send(Subjects);
+})
+
+
+App.post("/api/GetChemistryCycleSubjects",async(req,resp)=>{
+
+    const ChemistryCycleCollection = myDb.collection("ChemistryCycle")
+
+    const SearchedSubject = req.body.SubjectName
+    console.log(SearchedSubject)
+
+    const regex = new RegExp(SearchedSubject, 'i'); 
+
+    const Subjects = await ChemistryCycleCollection.find({ SubjectName: regex }).toArray();
+
+    console.log(Subjects)
+
+    resp.send(Subjects);
+})
+
+
+App.listen(PORT,err=>{
+
+    if(err)
+        console.log(err)
+    else
+        console.log("Server Running at port "+PORT)
+})
